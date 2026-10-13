@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우당탕탕 교실 타이머</title>
+    <!-- 구글 폰트: 둥근고딕 느낌의 넥슨Lv1고딕 또는 둥근 폰트 적용 -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Jua', sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #a8ede_a 0%, #fed6e3 100%);
+            background-color: #e0f7fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        /* 타이머 제목 입력 및 표시 */
+        #title-input {
+            font-size: 1.8rem;
+            border: 2px dashed #b2ebf2;
+            border-radius: 15px;
+            padding: 10px;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00838f;
+            outline: none;
+        }
+        #title-input:focus {
+            border-color: #00acc1;
+        }
+
+        /* 시간 설정 영역 */
+        .set-time-box {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .time-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .time-input-group label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        input[type="number"] {
+            width: 70px;
+            height: 50px;
+            font-size: 1.5rem;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            outline: none;
+        }
+        input[type="number"]:focus {
+            border-color: #ff8a80;
+        }
+
+        /* 프리셋 버튼 */
+        .presets {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+        .preset-btn {
+            background-color: #fff9c4;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #f57f17;
+            transition: 0.2s;
+        }
+        .preset-btn:hover {
+            background-color: #fff176;
+            transform: scale(1.05);
+        }
+
+        /* 타이머 디스플레이 */
+        #display {
+            font-size: 5rem;
+            margin: 20px 0;
+            color: #00838f;
+            letter-spacing: 2px;
+        }
+
+        /* 10초 전 경고 애니메이션 */
+        .warning {
+            color: #ff5252 !important;
+            animation: pulse 0.5s infinite alternate;
+        }
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.08); }
+        }
+
+        /* 제어 버튼 영역 */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .btn {
+            font-size: 1.3rem;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: 0.2s;
+        }
+        .btn-start { background-color: #66bb6a; }
+        .btn-start:hover { background-color: #4caf50; transform: translateY(-2px); }
+        .btn-pause { background-color: #ffa726; }
+        .btn-pause:hover { background-color: #fb8c00; transform: translateY(-2px); }
+        .btn-reset { background-color: #ef5350; }
+        .btn-reset:hover { background-color: #e53935; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 타이머 제목 입력 -->
+        <input type="text" id="title-input" value="✨ 모둠 활동 시간 ✨" placeholder="타이머 제목을 입력하세요">
+
+        <!-- 시, 분, 초 설정 입력창 -->
+        <div class="set-time-box" id="setup-view">
+            <div class="time-input-group">
+                <label>시간</label>
+                <input type="number" id="hours" value="0" min="0" max="23">
+            </div>
+            <div class="time-input-group">
+                <label>분</label>
+                <input type="number" id="minutes" value="3" min="0" max="59">
+            </div>
+            <div class="time-input-group">
+                <label>초</label>
+                <input type="number" id="seconds" value="0" min="0" max="59">
+            </div>
+        </div>
+
+        <!-- 빠른 설정 프리셋 -->
+        <div class="presets" id="preset-view">
+            <button class="preset-btn" onclick="setPreset(1)">1분</button>
+            <button class="preset-btn" onclick="setPreset(3)">3분</button>
+            <button class="preset-btn" onclick="setPreset(5)">5분</button>
+            <button class="preset-btn" onclick="setPreset(10)">10분</button>
+        </div>
+
+        <!-- 남은 시간 화면 -->
+        <div id="display">00:03:00</div>
+
+        <!-- 버튼 영역 -->
+        <div class="controls">
+            <button class="btn btn-start" onclick="startTimer()">시작</button>
+            <button class="btn btn-pause" onclick="pauseTimer()">일시정지</button>
+            <button class="btn btn-reset" onclick="resetTimer()">처음으로</button>
+        </div>
+    </div>
+
+    <script>
+        let totalSeconds = 180; // 기본 3분
+        let remainingSeconds = 180;
+        let timerId = null;
+        let isRunning = false;
+
+        const display = document.getElementById('display');
+        const hoursInput = document.getElementById('hours');
+        const minutesInput = document.getElementById('minutes');
+        const secondsInput = document.getElementById('seconds');
+        const setupView = document.getElementById('setup-view');
+        const presetView = document.getElementById('preset-view');
+        const container = document.querySelector('.container');
+
+        // 웹 오디오 API를 이용한 효과음 생성 (파일 없이 재생 가능)
+        function playSound(type) {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'tick') {
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime); // 째깍 소리
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.05);
+            } else if (type === 'end') {
+                // 종료 알람 (딩동댕 느낌의 연속음)
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // 도
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15); // 미
+                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.3); // 솔
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.6);
+            }
+        }
+
+        // 프리셋 설정 함수
+        function setPreset(mins) {
+            if (isRunning) return;
+            hoursInput.value = 0;
+            minutesInput.value = mins;
+            secondsInput.value = 0;
+            updateTimeFromInputs();
+        }
+
+        // 입력값으로 시간 업데이트
+        function updateTimeFromInputs() {
+            const h = parseInt(hoursInput.value) || 0;
+            const m = parseInt(minutesInput.value) || 0;
+            const s = parseInt(secondsInput.value) || 0;
+            totalSeconds = (h * 3600) + (m * 60) + s;
+            remainingSeconds = totalSeconds;
+            updateDisplay();
+        }
+
+        // 화면 시간 텍스트 업데이트
+        function updateDisplay() {
+            const h = Math.floor(remainingSeconds / 3600);
+            const m = Math.floor((remainingSeconds % 3600) / 60);
+            const s = remainingSeconds % 60;
+
+            display.textContent = 
+                String(h).padStart(2, '0') + ":" +
+                String(m).padStart(2, '0') + ":" +
+                String(s).padStart(2, '0');
+
+            // 10초 이하일 때 경고 효과
+            if (remainingSeconds <= 10 && remainingSeconds > 0) {
+                display.classList.add('warning');
+            } else {
+                display.classList.remove('warning');
+            }
+        }
+
+        // 입력창 값 변경 실시간 반영
+        [hoursInput, minutesInput, secondsInput].forEach(input => {
+            input.addEventListener('input', () => {
+                if (!isRunning) updateTimeFromInputs();
+            });
+        });
+
+        // 타이머 시작
+        function startTimer() {
+            if (isRunning) return;
+            
+            // 입력값이 비어있거나 0이면 실행 안 함
+            updateTimeFromInputs();
+            if (remainingSeconds <= 0) return;
+
+            isRunning = true;
+            setupView.style.display = 'none';
+            presetView.style.display = 'none';
+
+            timerId = setInterval(() => {
+                if (remainingSeconds > 0) {
+                    remainingSeconds--;
+                    updateDisplay();
+                    
+                    // 남은 10초부터 째깍 소리
+                    if (remainingSeconds <= 10 && remainingSeconds > 0) {
+                        playSound('tick');
+                    }
+                }
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerId);
+                    isRunning = false;
+                    playSound('end');
+                    alert("⏰ 시간이 모두 끝났습니다! 수고했어요!");
+                    resetTimer();
+                }
+            }, 1000);
+        }
+
+        // 일시정지
+        function pauseTimer() {
+            clearInterval(timerId);
+            isRunning = false;
+        }
+
+        // 리셋
+        function resetTimer() {
+            clearInterval(timerId);
+            isRunning = false;
+            setupView.style.display = 'flex';
+            presetView.style.display = 'flex';
+            display.classList.remove('warning');
+            updateTimeFromInputs();
+        }
+    </script>
+</body>
+</html>
